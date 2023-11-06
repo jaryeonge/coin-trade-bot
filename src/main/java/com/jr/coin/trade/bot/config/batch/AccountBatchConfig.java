@@ -51,7 +51,7 @@ public class AccountBatchConfig {
     public Tasklet getAccountBatchTasklet() {
         return (stepContribution, chunkContext) -> {
             List<UpbitAccountResponseDto> responseDto = accountJob.getAccount();
-            log.info(responseDto.toString());
+            accountJob.saveAccount(responseDto);
             return RepeatStatus.FINISHED;
         };
     }

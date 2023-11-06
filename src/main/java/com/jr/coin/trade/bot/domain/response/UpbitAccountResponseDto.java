@@ -15,7 +15,7 @@ public class UpbitAccountResponseDto {
     private String balance;
     private String locked;
     private String avg_buy_price;
-    private boolean avg_buy_price_modified;
+    private Boolean avg_buy_price_modified;
     private String unit_currency;
 
 }
