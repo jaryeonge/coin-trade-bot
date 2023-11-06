@@ -21,3 +21,6 @@ spring:
     generate-ddl: false
     show-sql: false
     open-in-view: false
+upbit:
+  access-key: ${ACCESS_KEY}
+  secret-key: ${SECRET_KEY}
