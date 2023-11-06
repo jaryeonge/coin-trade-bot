@@ -16,6 +16,7 @@ spring:
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: update
     database: mysql
     database-platform: org.hibernate.dialect.MySQL57Dialect
     generate-ddl: false
