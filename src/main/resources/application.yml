@@ -1,0 +1,23 @@
+server:
+  port: 8080
+  shutdown: graceful
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 15s
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_URL}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      connection-timeout: 5000
+  jpa:
+    hibernate:
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL57Dialect
+    generate-ddl: false
+    show-sql: false
+    open-in-view: false
