@@ -29,7 +29,7 @@ public class AccountJob {
         HashMap<String, String> params = new HashMap<>();
         ParameterizedTypeReference<List<UpbitAccountResponseDto>> responseType = new ParameterizedTypeReference<>() {};
 
-        return upbitApiClient.requestGetListToExchange(responseType, "/accounts", params);
+        return upbitApiClient.requestGetToExchange(responseType, "/accounts", params);
     }
 
     public void saveAccount(List<UpbitAccountResponseDto> upbitAccountResponseDtoList) {
