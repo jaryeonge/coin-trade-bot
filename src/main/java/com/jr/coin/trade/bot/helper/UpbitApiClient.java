@@ -138,7 +138,7 @@ public class UpbitApiClient {
         return result.block();
     }
 
-    public <T> List<T> requestGetListToExchange(ParameterizedTypeReference<List<T>> responseClass, String path, HashMap<String, String> params) {
+    public <T> List<T> requestGetToExchange(ParameterizedTypeReference<List<T>> responseClass, String path, HashMap<String, String> params) {
         webClient = makeHeader();
 
         Mono<List<T>> result = webClient.mutate()
@@ -167,6 +167,23 @@ public class UpbitApiClient {
         webClient = makeHeader();
 
         Mono<T> result = webClient.mutate()
+                .build()
+                .get()
+                .uri(u -> u.path(path).queryParams(multiValueMap).build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleUpbitApiError)
+                .bodyToMono(responseClass)
+                .contextWrite(context -> context.put(Constants.EXECUTION_TIME_MAP_KEY, System.currentTimeMillis()));
+        return result.block();
+    }
+
+    public <T> List<T> requestGetToQuotation(ParameterizedTypeReference<List<T>> responseClass, String path, HashMap<String, String> params) {
+        MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
+        params.forEach(multiValueMap::add);
+
+        webClient = makeHeader();
+
+        Mono<List<T>> result = webClient.mutate()
                 .build()
                 .get()
                 .uri(u -> u.path(path).queryParams(multiValueMap).build())
