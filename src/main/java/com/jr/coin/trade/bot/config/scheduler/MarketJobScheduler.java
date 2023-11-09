@@ -24,7 +24,7 @@ public class MarketJobScheduler {
         this.getMarketBatchJob = getMarketBatchJob;
     }
 
-    @Scheduled(cron = "0 0 0 0 * *")
+    @Scheduled(cron = "0 0 0 * * *")
     public void jobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
             JobRestartException, JobInstanceAlreadyCompleteException {
         JobParameters parameters = new JobParameters();
