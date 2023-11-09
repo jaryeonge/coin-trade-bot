@@ -1,10 +1,7 @@
 package com.jr.coin.trade.bot.config.scheduler;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
@@ -12,24 +9,29 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.util.Date;
+
 @Slf4j
 @Configuration
-public class MarketJobScheduler {
+public class CandleJobScheduler {
 
     private final JobLauncher jobLauncher;
-    private final Job getMarketBatchJob;
+    private final Job getCandleMinuteBatchJob;
 
-    public MarketJobScheduler(JobLauncher jobLauncher, Job getMarketBatchJob) {
+    public CandleJobScheduler(JobLauncher jobLauncher, Job getCandleMinuteBatchJob) {
         this.jobLauncher = jobLauncher;
-        this.getMarketBatchJob = getMarketBatchJob;
+        this.getCandleMinuteBatchJob = getCandleMinuteBatchJob;
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void jobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
             JobRestartException, JobInstanceAlreadyCompleteException {
-        JobParameters parameters = new JobParameters();
+        JobParameters parameters = new JobParametersBuilder()
+                .addString("market", "KRW-BTC")
+                .addDate("date", new Date())
+                .toJobParameters();
 
-        JobExecution jobExecution = jobLauncher.run(getMarketBatchJob, parameters);
+        JobExecution jobExecution = jobLauncher.run(getCandleMinuteBatchJob, parameters);
 
         while (jobExecution.isRunning()) {
             log.info("...");

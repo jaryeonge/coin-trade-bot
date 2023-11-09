@@ -40,11 +40,11 @@ public class MarketJob {
                     Market market;
                     if (optionalMarket.isEmpty()) {
                         market = new Market();
+                        market.setMarket(upbitMarketResponseDto.getMarket());
                     } else {
                         market = optionalMarket.get();
                     }
 
-                    market.setMarket(upbitMarketResponseDto.getMarket());
                     market.setKoreanName(upbitMarketResponseDto.getKorean_name());
                     market.setEnglishName(upbitMarketResponseDto.getEnglish_name());
 
