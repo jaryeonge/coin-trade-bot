@@ -39,11 +39,11 @@ public class AccountJob {
                     Account account;
                     if (optionalAccount.isEmpty()) {
                         account = new Account();
+                        account.setCurrency(upbitAccountResponseDto.getCurrency());
                     } else {
                         account = optionalAccount.get();
                     }
 
-                    account.setCurrency(upbitAccountResponseDto.getCurrency());
                     account.setBalance(upbitAccountResponseDto.getBalance());
                     account.setLocked(upbitAccountResponseDto.getLocked());
                     account.setAvgBuyPrice(upbitAccountResponseDto.getAvg_buy_price());
