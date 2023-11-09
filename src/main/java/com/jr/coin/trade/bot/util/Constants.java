@@ -9,4 +9,6 @@ public class Constants {
 
     public static final String EXECUTION_TIME_MAP_KEY = "processTime";
 
+    public static final String MARKET_TIME_SPLITTER = "|";
+
 }
