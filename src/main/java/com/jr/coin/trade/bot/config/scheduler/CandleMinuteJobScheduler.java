@@ -1,5 +1,6 @@
 package com.jr.coin.trade.bot.config.scheduler;
 
+import com.jr.coin.trade.bot.util.JobUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -13,62 +14,43 @@ import java.util.Date;
 
 @Slf4j
 @Configuration
-public class CandleJobScheduler {
+public class CandleMinuteJobScheduler {
 
     private final JobLauncher jobLauncher;
     private final Job getCandleMinuteBatchJob;
 
-    public CandleJobScheduler(JobLauncher jobLauncher, Job getCandleMinuteBatchJob) {
+    public CandleMinuteJobScheduler(JobLauncher jobLauncher, Job getCandleMinuteBatchJob) {
         this.jobLauncher = jobLauncher;
         this.getCandleMinuteBatchJob = getCandleMinuteBatchJob;
     }
 
     @Scheduled(cron = "0 * * * * *")
-    public void minuteJobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
+    public void minuteBTCJobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
             JobRestartException, JobInstanceAlreadyCompleteException {
-        JobParameters parameters = new JobParametersBuilder()
+        JobParameters minuteParameters = new JobParametersBuilder()
                 .addString("market", "KRW-BTC")
                 .addLong("unit", 1L)
                 .addDate("date", new Date())
                 .toJobParameters();
 
-        JobExecution jobExecution = jobLauncher.run(getCandleMinuteBatchJob, parameters);
+        JobExecution minuteJobExecution = jobLauncher.run(getCandleMinuteBatchJob, minuteParameters);
 
-        while (jobExecution.isRunning()) {
-            log.info("...");
-        }
-
-        log.info("Job Execution: " + jobExecution.getStatus());
-        log.info("Job getJobId: " + jobExecution.getJobId());
-        log.info("Job getExitStatus: " + jobExecution.getExitStatus());
-        log.info("Job getJobInstance: " + jobExecution.getJobInstance());
-        log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
-        log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
-        log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
+        JobUtils.logJobExecutionDetails(minuteJobExecution);
     }
 
-    @Scheduled(cron = "0 * * * * *")
-    public void hourJobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
+    @Scheduled(cron = "0 0 * * * *")
+    public void hourBTCJobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
             JobRestartException, JobInstanceAlreadyCompleteException {
-        JobParameters parameters = new JobParametersBuilder()
+        JobParameters hourParameters = new JobParametersBuilder()
                 .addString("market", "KRW-BTC")
                 .addLong("unit", 60L)
                 .addDate("date", new Date())
                 .toJobParameters();
 
-        JobExecution jobExecution = jobLauncher.run(getCandleMinuteBatchJob, parameters);
+        JobExecution hourJobExecution = jobLauncher.run(getCandleMinuteBatchJob, hourParameters);
 
-        while (jobExecution.isRunning()) {
-            log.info("...");
-        }
-
-        log.info("Job Execution: " + jobExecution.getStatus());
-        log.info("Job getJobId: " + jobExecution.getJobId());
-        log.info("Job getExitStatus: " + jobExecution.getExitStatus());
-        log.info("Job getJobInstance: " + jobExecution.getJobInstance());
-        log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
-        log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
-        log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
+        JobUtils.logJobExecutionDetails(hourJobExecution);
     }
+
 
 }

@@ -8,7 +8,6 @@ import com.jr.coin.trade.bot.util.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,13 +31,18 @@ public class CandleJob {
         this.candleMinuteRepository = candleMinuteRepository;
     }
 
-    public String getLastCandleTimeByMarket(String market, int count) {
-        LocalDateTime localDateTime = LocalDateTime.now().withSecond(0).minusHours(9);
-        localDateTime = localDateTime.minusMinutes(count * 200L);
+    public String getLastCandleTimeByMarket(int count, Long unit) {
+        LocalDateTime localDateTime;
+        if (unit == 60L) {
+            localDateTime = LocalDateTime.now().withMinute(0).withSecond(0).minusHours(9);
+        } else {
+            localDateTime = LocalDateTime.now().withSecond(0).minusHours(9);
+        }
+        localDateTime = localDateTime.minusMinutes(count * unit * 200L);
         return localDateTime.format(requestTimeFormatter);
     }
 
-    public List<UpbitCandleMinuteResponseDto> getCandleMinute(String market, String lastCandleTime, int count) {
+    public List<UpbitCandleMinuteResponseDto> getCandleMinute(String market, String lastCandleTime, int count, Long unit) {
         String countString = count > 0 && count <= 200 ? String.valueOf(count) : "200";
 
         HashMap<String, String> params = new HashMap<>();
@@ -48,14 +52,16 @@ public class CandleJob {
 
         ParameterizedTypeReference<List<UpbitCandleMinuteResponseDto>> responseType = new ParameterizedTypeReference<>() {};
 
-        return upbitApiClient.requestGetToQuotation(responseType, "/candles/minutes/1", params);
+        return upbitApiClient.requestGetToQuotation(responseType, "/candles/minutes/" + unit.toString(), params);
     }
 
     public int saveCandleMinute(List<UpbitCandleMinuteResponseDto> upbitCandleMinuteResponseDtoList) {
         AtomicInteger saveCount = new AtomicInteger();
         upbitCandleMinuteResponseDtoList
                 .forEach(upbitCandleMinuteResponseDto -> {
-                    String id = upbitCandleMinuteResponseDto.getMarket() + Constants.MARKET_TIME_SPLITTER + upbitCandleMinuteResponseDto.getCandle_date_time_kst();
+                    String id = upbitCandleMinuteResponseDto.getMarket() + Constants.MARKET_TIME_SPLITTER
+                            + upbitCandleMinuteResponseDto.getCandle_date_time_kst() + Constants.MARKET_TIME_SPLITTER
+                            + upbitCandleMinuteResponseDto.getUnit();
 
                     Optional<CandleMinute> optionalCandleMinute = candleMinuteRepository.findById(id);
                     CandleMinute candleMinute;
@@ -77,6 +83,9 @@ public class CandleJob {
 
                         candleMinuteRepository.save(candleMinute);
                         saveCount.addAndGet(1);
+                    } else {
+                        candleMinute = optionalCandleMinute.get();
+
                     }
                 });
         return saveCount.get();

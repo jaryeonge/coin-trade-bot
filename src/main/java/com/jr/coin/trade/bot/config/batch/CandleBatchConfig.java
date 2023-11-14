@@ -45,19 +45,19 @@ public class CandleBatchConfig {
     public Step getCandleMinuteBatchStep() {
         return new StepBuilder("getCandleMinuteBatchStep", jobRepository)
                 .allowStartIfComplete(true)
-                .tasklet(getCandleMinuteBatchTasklet(null), transactionManager)
+                .tasklet(getCandleMinuteBatchTasklet(null, null), transactionManager)
                 .build();
     }
 
     @Bean
     @StepScope
-    public Tasklet getCandleMinuteBatchTasklet(@Value("#{jobParameters[market]}") String market) {
+    public Tasklet getCandleMinuteBatchTasklet(@Value("#{jobParameters[market]}") String market, @Value("#{jobParameters[unit]}") Long unit) {
         return (stepContribution, chunkContext) -> {
             int loopCount = 0;
             while (true) {
-                String lastCandleTime = candleJob.getLastCandleTimeByMarket(market, loopCount);
+                String lastCandleTime = candleJob.getLastCandleTimeByMarket(loopCount, unit);
                 log.info("Last candle time: " + lastCandleTime);
-                List<UpbitCandleMinuteResponseDto> responseDto = candleJob.getCandleMinute(market, lastCandleTime,200);
+                List<UpbitCandleMinuteResponseDto> responseDto = candleJob.getCandleMinute(market, lastCandleTime,200, unit);
                 int saveCount = candleJob.saveCandleMinute(responseDto);
                 log.info("Market: " + market + " | " + saveCount + " candles are saved.");
 
