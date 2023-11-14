@@ -1,5 +1,6 @@
 package com.jr.coin.trade.bot.config.scheduler;
 
+import com.jr.coin.trade.bot.util.JobUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -30,17 +31,6 @@ public class AccountJobScheduler {
         JobParameters parameters = new JobParameters();
 
         JobExecution jobExecution = jobLauncher.run(getAccountBatchJob, parameters);
-
-        while (jobExecution.isRunning()) {
-            log.info("...");
-        }
-
-        log.info("Job Execution: " + jobExecution.getStatus());
-        log.info("Job getJobId: " + jobExecution.getJobId());
-        log.info("Job getExitStatus: " + jobExecution.getExitStatus());
-        log.info("Job getJobInstance: " + jobExecution.getJobInstance());
-        log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
-        log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
-        log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
+        JobUtils.logJobExecutionDetails(jobExecution);
     }
 }

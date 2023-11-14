@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface CandleMinuteRepository extends JpaRepository<CandleMinute, String> {
 
-    Optional<CandleMinute> findById(String market);
+    Optional<CandleMinute> findById(String id);
 
     Page<CandleMinute> findByMarketOrderByCandleDateTimeKstDesc(String market, Pageable pageable);
 
