@@ -24,10 +24,35 @@ public class CandleJobScheduler {
     }
 
     @Scheduled(cron = "0 * * * * *")
-    public void jobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
+    public void minuteJobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
             JobRestartException, JobInstanceAlreadyCompleteException {
         JobParameters parameters = new JobParametersBuilder()
                 .addString("market", "KRW-BTC")
+                .addLong("unit", 1L)
+                .addDate("date", new Date())
+                .toJobParameters();
+
+        JobExecution jobExecution = jobLauncher.run(getCandleMinuteBatchJob, parameters);
+
+        while (jobExecution.isRunning()) {
+            log.info("...");
+        }
+
+        log.info("Job Execution: " + jobExecution.getStatus());
+        log.info("Job getJobId: " + jobExecution.getJobId());
+        log.info("Job getExitStatus: " + jobExecution.getExitStatus());
+        log.info("Job getJobInstance: " + jobExecution.getJobInstance());
+        log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
+        log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
+        log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
+    }
+
+    @Scheduled(cron = "0 * * * * *")
+    public void hourJobScheduled() throws JobParametersInvalidException, JobExecutionAlreadyRunningException,
+            JobRestartException, JobInstanceAlreadyCompleteException {
+        JobParameters parameters = new JobParametersBuilder()
+                .addString("market", "KRW-BTC")
+                .addLong("unit", 60L)
                 .addDate("date", new Date())
                 .toJobParameters();
 
