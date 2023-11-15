@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.jr.coin.trade.bot.domain.response.UpbitErrorResponseDto;
 import com.jr.coin.trade.bot.exception.UpbitApiException;
-import com.jr.coin.trade.bot.util.Constants;
 import com.jr.coin.trade.bot.util.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,10 +73,10 @@ public class UpbitApiClient {
                 .sign(algorithm);
     }
 
-    public <T> T requestGetToExchange(Class<T> responseClass, String path, HashMap<String, String> params) {
+    public <T> Mono<T> requestGetToExchange(Class<T> responseClass, String path, HashMap<String, String> params) {
         webClient = makeHeader();
 
-        Mono<T> result = webClient.mutate()
+        return webClient.mutate()
                 .build()
                 .get()
                 .uri(u -> u.path(path).build())
@@ -90,15 +89,13 @@ public class UpbitApiClient {
                 })
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleUpbitApiError)
-                .bodyToMono(responseClass)
-                .contextWrite(context -> context.put(Constants.EXECUTION_TIME_MAP_KEY, System.currentTimeMillis()));
-        return result.block();
+                .bodyToMono(responseClass);
     }
 
-    public <T> T requestPostToExchange(Class<T> responseClass, String path, HashMap<String, String> params) {
+    public <T> Mono<T> requestPostToExchange(Class<T> responseClass, String path, HashMap<String, String> params) {
         webClient = makeHeader();
 
-        Mono<T> result = webClient.mutate()
+        return webClient.mutate()
                 .build()
                 .post()
                 .uri(u -> u.path(path).build())
@@ -111,15 +108,13 @@ public class UpbitApiClient {
                 })
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleUpbitApiError)
-                .bodyToMono(responseClass)
-                .contextWrite(context -> context.put(Constants.EXECUTION_TIME_MAP_KEY, System.currentTimeMillis()));
-        return result.block();
+                .bodyToMono(responseClass);
     }
 
-    public <T> T requestDeleteToExchange(Class<T> responseClass, String path, HashMap<String, String> params) {
+    public <T> Mono<T> requestDeleteToExchange(Class<T> responseClass, String path, HashMap<String, String> params) {
         webClient = makeHeader();
 
-        Mono<T> result = webClient.mutate()
+        return webClient.mutate()
                 .build()
                 .delete()
                 .uri(u -> u.path(path).build())
@@ -132,16 +127,13 @@ public class UpbitApiClient {
                 })
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleUpbitApiError)
-                .bodyToMono(responseClass)
-                .contextWrite(context -> context.put(Constants.EXECUTION_TIME_MAP_KEY, System.currentTimeMillis()));
-
-        return result.block();
+                .bodyToMono(responseClass);
     }
 
-    public <T> List<T> requestGetToExchange(ParameterizedTypeReference<List<T>> responseClass, String path, HashMap<String, String> params) {
+    public <T> Mono<List<T>> requestGetToExchange(ParameterizedTypeReference<List<T>> responseClass, String path, HashMap<String, String> params) {
         webClient = makeHeader();
 
-        Mono<List<T>> result = webClient.mutate()
+        return webClient.mutate()
                 .build()
                 .get()
                 .uri(u -> u.path(path).build())
@@ -154,44 +146,37 @@ public class UpbitApiClient {
                 })
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleUpbitApiError)
-                .bodyToMono(responseClass)
-                .contextWrite(context -> context.put(Constants.EXECUTION_TIME_MAP_KEY, System.currentTimeMillis()));
-
-        return result.block();
+                .bodyToMono(responseClass);
     }
 
-    public <T> T requestGetToQuotation(Class<T> responseClass, String path, HashMap<String, String> params) {
+    public <T> Mono<T> requestGetToQuotation(Class<T> responseClass, String path, HashMap<String, String> params) {
         MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
         params.forEach(multiValueMap::add);
 
         webClient = makeHeader();
 
-        Mono<T> result = webClient.mutate()
+        return webClient.mutate()
                 .build()
                 .get()
                 .uri(u -> u.path(path).queryParams(multiValueMap).build())
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleUpbitApiError)
-                .bodyToMono(responseClass)
-                .contextWrite(context -> context.put(Constants.EXECUTION_TIME_MAP_KEY, System.currentTimeMillis()));
-        return result.block();
+                .bodyToMono(responseClass);
     }
 
-    public <T> List<T> requestGetToQuotation(ParameterizedTypeReference<List<T>> responseClass, String path, HashMap<String, String> params) {
+    public <T> Mono<List<T>> requestGetToQuotation(ParameterizedTypeReference<List<T>> responseClass, String path, HashMap<String, String> params) {
         MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
         params.forEach(multiValueMap::add);
 
         webClient = makeHeader();
 
-        Mono<List<T>> result = webClient.mutate()
+        return webClient.mutate()
                 .build()
                 .get()
                 .uri(u -> u.path(path).queryParams(multiValueMap).build())
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleUpbitApiError)
-                .bodyToMono(responseClass)
-                .contextWrite(context -> context.put(Constants.EXECUTION_TIME_MAP_KEY, System.currentTimeMillis()));
-        return result.block();
+                .bodyToMono(responseClass);
     }
 
     private WebClient makeHeader() {
