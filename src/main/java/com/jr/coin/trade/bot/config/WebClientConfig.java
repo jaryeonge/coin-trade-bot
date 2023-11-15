@@ -1,6 +1,5 @@
 package com.jr.coin.trade.bot.config;
 
-import com.jr.coin.trade.bot.util.Constants;
 import com.jr.coin.trade.bot.util.lambda.HttpClientThrowingConsumer;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -109,13 +108,7 @@ public class WebClientConfig {
                                             "[Response Header] : \n {}"
                                     , headers);
 
-                            return Mono.just(clientResponse)
-                                    .flatMap(s -> Mono.deferContextual(contextView -> {
-                                                long executeTime = System.currentTimeMillis() - (Long) contextView.get(Constants.EXECUTION_TIME_MAP_KEY);
-                                                log.info("Execution Time : {}", executeTime);
-                                                return Mono.just(clientResponse);
-                                            })
-                                    );
+                            return Mono.just(clientResponse);
                         }
                 ))
                 .build();
