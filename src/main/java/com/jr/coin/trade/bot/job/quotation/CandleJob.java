@@ -5,9 +5,14 @@ import com.jr.coin.trade.bot.domain.response.UpbitCandleMinuteResponseDto;
 import com.jr.coin.trade.bot.helper.UpbitApiClient;
 import com.jr.coin.trade.bot.repository.CandleMinuteRepository;
 import com.jr.coin.trade.bot.util.Constants;
+import com.jr.coin.trade.bot.util.JobUtils;
+import com.jr.coin.trade.bot.util.ScheduleCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +36,55 @@ public class CandleJob {
         this.candleMinuteRepository = candleMinuteRepository;
     }
 
-    public String getLastCandleTimeByMarket(int count, Long unit) {
+    public Tasklet getBtcCandleMinuteTasklet() {
+        return (stepContribution, chunkContext) -> {
+            if (JobUtils.checkSchedule(ScheduleCode.MINUTE)) {
+                String market = "KRW-BTC";
+                Long unit = 1L;
+                int loopCount = 0;
+                while (true) {
+                    String lastCandleTime = getLastCandleTimeByMarket(loopCount, unit);
+                    log.info("Last candle time: " + lastCandleTime);
+                    List<UpbitCandleMinuteResponseDto> responseDto = getCandleMinute(market, lastCandleTime,200, unit);
+                    int saveCount = saveCandleMinute(responseDto);
+                    log.info("Market: " + market + " | " + saveCount + " candles are saved.");
+
+                    if (saveCount == 0) {
+                        break;
+                    }
+
+                    loopCount += 1;
+                }
+            }
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    public Tasklet getBtcCandleHourTasklet() {
+        return (stepContribution, chunkContext) -> {
+            if (JobUtils.checkSchedule(ScheduleCode.HOUR)) {
+                String market = "KRW-BTC";
+                Long unit = 60L;
+                int loopCount = 0;
+                while (true) {
+                    String lastCandleTime = getLastCandleTimeByMarket(loopCount, unit);
+                    log.info("Last candle time: " + lastCandleTime);
+                    List<UpbitCandleMinuteResponseDto> responseDto = getCandleMinute(market, lastCandleTime,200, unit);
+                    int saveCount = saveCandleMinute(responseDto);
+                    log.info("Market: " + market + " | " + saveCount + " candles are saved.");
+
+                    if (saveCount == 0) {
+                        break;
+                    }
+
+                    loopCount += 1;
+                }
+            }
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    private String getLastCandleTimeByMarket(int count, Long unit) {
         LocalDateTime localDateTime;
         if (unit == 60L) {
             localDateTime = LocalDateTime.now().withMinute(0).withSecond(0).minusHours(9);
@@ -42,7 +95,7 @@ public class CandleJob {
         return localDateTime.format(requestTimeFormatter);
     }
 
-    public List<UpbitCandleMinuteResponseDto> getCandleMinute(String market, String lastCandleTime, int count, Long unit) {
+    private List<UpbitCandleMinuteResponseDto> getCandleMinute(String market, String lastCandleTime, int count, Long unit) {
         String countString = count > 0 && count <= 200 ? String.valueOf(count) : "200";
 
         HashMap<String, String> params = new HashMap<>();
@@ -51,11 +104,11 @@ public class CandleJob {
         params.put("count", countString);
 
         ParameterizedTypeReference<List<UpbitCandleMinuteResponseDto>> responseType = new ParameterizedTypeReference<>() {};
-
-        return upbitApiClient.requestGetToQuotation(responseType, "/candles/minutes/" + unit.toString(), params);
+        Mono<List<UpbitCandleMinuteResponseDto>> result = upbitApiClient.requestGetToQuotation(responseType, "/candles/minutes/" + unit.toString(), params);
+        return result.block();
     }
 
-    public int saveCandleMinute(List<UpbitCandleMinuteResponseDto> upbitCandleMinuteResponseDtoList) {
+    private int saveCandleMinute(List<UpbitCandleMinuteResponseDto> upbitCandleMinuteResponseDtoList) {
         AtomicInteger saveCount = new AtomicInteger();
         upbitCandleMinuteResponseDtoList
                 .forEach(upbitCandleMinuteResponseDto -> {

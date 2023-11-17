@@ -5,9 +5,14 @@ import com.jr.coin.trade.bot.domain.response.UpbitAccountResponseDto;
 import com.jr.coin.trade.bot.helper.UpbitApiClient;
 import com.jr.coin.trade.bot.repository.AccountRepository;
 import com.jr.coin.trade.bot.util.Constants;
+import com.jr.coin.trade.bot.util.JobUtils;
+import com.jr.coin.trade.bot.util.ScheduleCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,14 +30,25 @@ public class AccountJob {
         this.accountRepository = accountRepository;
     }
 
-    public List<UpbitAccountResponseDto> getAccount() {
-        HashMap<String, String> params = new HashMap<>();
-        ParameterizedTypeReference<List<UpbitAccountResponseDto>> responseType = new ParameterizedTypeReference<>() {};
-
-        return upbitApiClient.requestGetToExchange(responseType, "/accounts", params);
+    public Tasklet getAccountTasklet() {
+        return (stepContribution, chunkContext) -> {
+            if (JobUtils.checkSchedule(ScheduleCode.MINUTE)) {
+                List<UpbitAccountResponseDto> responseDto = getAccount();
+                saveAccount(responseDto);
+            }
+            return RepeatStatus.FINISHED;
+        };
     }
 
-    public void saveAccount(List<UpbitAccountResponseDto> upbitAccountResponseDtoList) {
+    private List<UpbitAccountResponseDto> getAccount() {
+        HashMap<String, String> params = new HashMap<>();
+        ParameterizedTypeReference<List<UpbitAccountResponseDto>> responseType = new ParameterizedTypeReference<>() {};
+        Mono<List<UpbitAccountResponseDto>> result = upbitApiClient.requestGetToExchange(responseType, "/accounts", params);
+
+        return result.block();
+    }
+
+    private void saveAccount(List<UpbitAccountResponseDto> upbitAccountResponseDtoList) {
         upbitAccountResponseDtoList
                 .forEach(upbitAccountResponseDto -> {
                     Optional<Account> optionalAccount = accountRepository.findByCurrency(upbitAccountResponseDto.getCurrency());
